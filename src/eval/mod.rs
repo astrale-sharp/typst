@@ -1192,6 +1192,7 @@ impl ast::Pattern {
                 vm.define(ident, value);
                 Ok(Value::None)
             }
+            ast::PatternKind::Underscore => Ok(Value::None),
             ast::PatternKind::Destructure(pattern) => {
                 match value {
                     Value::Array(value) => {
@@ -1203,6 +1204,12 @@ impl ast::Pattern {
                                         bail!(ident.span(), "not enough elements to destructure");
                                     };
                                     vm.define(ident.clone(), v.clone());
+                                    i += 1;
+                                }
+                                ast::DestructuringKind::Underscore(span) => {
+                                    if value.at(i).is_err() {
+                                        bail!(*span, "not enough elements to destructure")
+                                    }
                                     i += 1;
                                 }
                                 ast::DestructuringKind::Sink(ident) => {
@@ -1223,6 +1230,7 @@ impl ast::Pattern {
                                         "cannot destructure named elements from an array"
                                     )
                                 }
+                                ast::DestructuringKind::UnderscoreNamed(_) => (),
                             }
                         }
                         if i < value.len() as i64 {
@@ -1234,6 +1242,7 @@ impl ast::Pattern {
                         let mut used = HashSet::new();
                         for p in &pattern {
                             match p {
+                                ast::DestructuringKind::Underscore(s) => (),
                                 ast::DestructuringKind::Ident(ident) => {
                                     let Ok(v) = value.at(ident) else {
                                         bail!(ident.span(), "destructuring key not found in dictionary");
@@ -1250,6 +1259,14 @@ impl ast::Pattern {
                                     };
                                     vm.define(ident.clone(), v.clone());
                                     used.insert(key.clone().take());
+                                }
+                                ast::DestructuringKind::UnderscoreNamed(ident) => {
+                                    if value.at(ident).is_err() {
+                                        bail!(
+                                            ident.span(),
+                                            "destructuring key not found in dictionary"
+                                        )
+                                    }
                                 }
                             }
                         }

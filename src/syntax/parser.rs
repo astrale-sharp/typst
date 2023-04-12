@@ -707,7 +707,7 @@ fn content_block(p: &mut Parser) {
 
 fn with_paren(p: &mut Parser) {
     let m = p.marker();
-    let mut kind = collection(p, true, false);
+    let mut kind = collection(p, true);
     if p.at(SyntaxKind::Arrow) {
         validate_params(p, m);
         p.wrap(m, SyntaxKind::Params);
@@ -723,7 +723,7 @@ fn with_paren(p: &mut Parser) {
     p.wrap(m, kind);
 }
 
-fn collection(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKind {
+fn collection(p: &mut Parser, keyed: bool) -> SyntaxKind {
     p.stop_at_newline(false);
     p.assert(SyntaxKind::LeftParen);
 
@@ -737,7 +737,7 @@ fn collection(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKin
 
     while !p.current().is_terminator() {
         let prev = p.prev_end();
-        match item(p, keyed, accept_underscore) {
+        match item(p, keyed) {
             SyntaxKind::Spread => parenthesized = false,
             SyntaxKind::Named | SyntaxKind::Keyed if kind.is_none() => {
                 kind = Some(SyntaxKind::Dict);
@@ -748,7 +748,7 @@ fn collection(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKin
         }
 
         if !p.progress(prev) {
-            println!("NO PROGRESS in collection");
+            //  println!("NO PROGRESS in collection");
             p.unexpected();
             continue;
         }
@@ -774,13 +774,14 @@ fn collection(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKin
     }
 }
 
-fn item(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKind {
+/// always accepts underscores, that should be handled in the validation
+fn item(p: &mut Parser, keyed: bool) -> SyntaxKind {
     let m = p.marker();
 
     if p.eat_if(SyntaxKind::Dots) {
-        println!("item::eat_dots");
+        //   println!("item::eat_dots");
         if p.at(SyntaxKind::Comma) || p.at(SyntaxKind::RightParen) {
-            println!("item::wrap spread");
+            //     println!("item::wrap spread");
             p.wrap(m, SyntaxKind::Spread);
             return SyntaxKind::Spread;
         }
@@ -815,9 +816,8 @@ fn item(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKind {
                 if keyed {
                     message.push_str(" or string");
                 }
-                if accept_underscore {
-                    message.push_str(" or an underscore");
-                }
+
+                message.push_str(" or an underscore");
                 message.push_str(", found ");
                 message.push_str(child.kind().name());
                 child.convert_to_error(message);
@@ -825,7 +825,7 @@ fn item(p: &mut Parser, keyed: bool, accept_underscore: bool) -> SyntaxKind {
             SyntaxKind::Named
         }
     };
-    println!("item::wrap {kind:?}");
+    //println!("item::wrap {kind:?}");
     p.wrap(m, kind);
     kind
 }
@@ -837,8 +837,8 @@ fn args(p: &mut Parser) {
 
     let m = p.marker();
     if p.at(SyntaxKind::LeftParen) {
-        collection(p, false, false);
-        validate_args(p, m);
+        collection(p, false);
+        validate_args(p, m); //
     }
 
     while p.directly_at(SyntaxKind::LeftBracket) {
@@ -857,8 +857,7 @@ fn pattern(p: &mut Parser) -> PatternKind {
     let m = p.marker();
 
     if p.at(SyntaxKind::LeftParen) {
-        let kind = collection(p, false,true);
-//        collection(p, false, true);
+        let kind = collection(p, false);
         validate_destruct_pattern(p, m);
         p.wrap(m, SyntaxKind::Pattern);
 
@@ -868,9 +867,10 @@ fn pattern(p: &mut Parser) -> PatternKind {
             PatternKind::Destructuring
         }
     } else {
-        if p.expect(SyntaxKind::Ident) {
-            p.wrap(m, SyntaxKind::Pattern);
+        if !p.eat_if(SyntaxKind::Ident) && !p.eat_if(SyntaxKind::Underscore) {
+            p.expected("expected ident or underscore");
         }
+        p.wrap(m, SyntaxKind::Pattern);
         PatternKind::Normal
     }
 }
@@ -887,7 +887,7 @@ fn let_binding(p: &mut Parser) {
             closure = p.directly_at(SyntaxKind::LeftParen);
             if closure {
                 let m3 = p.marker();
-                collection(p, false, true);
+                collection(p, false);
                 validate_params(p, m3);
                 p.wrap(m3, SyntaxKind::Params);
             }
@@ -1431,16 +1431,16 @@ impl<'s> Parser<'s> {
     }
 
     fn unexpected(&mut self) {
-        println!(
-            "{}",
-            std::backtrace::Backtrace::force_capture()
-                .to_string()
-                .split('\n')
-                .into_iter()
-                .take(3)
-                .collect::<Vec<_>>()
-                .join("\n")
-        );
+        // println!(
+        //     "{}",
+        //     std::backtrace::Backtrace::force_capture()
+        //         .to_string()
+        //         .split('\n')
+        //         .into_iter()
+        //         .take(3)
+        //         .collect::<Vec<_>>()
+        //         .join("\n")
+        // );
         self.unskip();
         while self
             .nodes

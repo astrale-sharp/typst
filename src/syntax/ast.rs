@@ -1602,6 +1602,7 @@ node! {
 pub enum PatternKind {
     /// A single identifier: `x`.
     Ident(Ident),
+    Underscore,
     /// A destructuring pattern: `(x, _, ..y)`.
     Destructure(Vec<DestructuringKind>),
 }
@@ -1611,24 +1612,29 @@ pub enum PatternKind {
 pub enum DestructuringKind {
     /// An identifier: `x`.
     Ident(Ident),
+    /// An underscore: `_`.
+    Underscore(Span),
     /// An argument sink: `..y`.
     Sink(Option<Ident>),
     /// Named arguments: `x: 1`.
     Named(Ident, Ident),
+    /// Underscore Named arguments: `x: 1`.
+    UnderscoreNamed(Ident),
 }
 
 impl Pattern {
     /// The kind of the pattern.
     pub fn kind(&self) -> PatternKind {
-        if self
+        let it = self
             .0
             .children()
             .map(SyntaxNode::kind)
             .skip_while(|&kind| kind == SyntaxKind::LeftParen)
-            .take_while(|&kind| kind != SyntaxKind::RightParen)
-            .eq([SyntaxKind::Ident])
-        {
+            .take_while(|&kind| kind != SyntaxKind::RightParen);
+        if it.clone().eq([SyntaxKind::Ident]) {
             return PatternKind::Ident(self.0.cast_first_match().unwrap_or_default());
+        } else if it.eq([SyntaxKind::Underscore]) {
+            return PatternKind::Underscore;
         }
 
         let mut bindings = Vec::new();
@@ -1647,6 +1653,9 @@ impl Pattern {
                     let ident = filtered.next().unwrap_or_default();
                     bindings.push(DestructuringKind::Named(key, ident));
                 }
+                SyntaxKind::Underscore => {
+                    bindings.push(DestructuringKind::Underscore(child.span()))
+                }
                 _ => (),
             }
         }
@@ -1658,12 +1667,15 @@ impl Pattern {
     pub fn idents(&self) -> Vec<Ident> {
         match self.kind() {
             PatternKind::Ident(ident) => vec![ident],
+            PatternKind::Underscore => vec![],
             PatternKind::Destructure(bindings) => bindings
                 .into_iter()
                 .filter_map(|binding| match binding {
                     DestructuringKind::Ident(ident) => Some(ident),
                     DestructuringKind::Sink(ident) => ident,
                     DestructuringKind::Named(_, ident) => Some(ident),
+                    DestructuringKind::Underscore(_) => Option::None,
+                    DestructuringKind::UnderscoreNamed(_) => Option::None,
                 })
                 .collect(),
         }

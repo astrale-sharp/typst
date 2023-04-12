@@ -126,7 +126,8 @@
 
 // Should output `3`.
 #{
-  // Error: 6 expected identifier
+  // Error: 6 expected identifier or underscore
+  // Error: 6 expected keyword `in`
   // Error: 10 expected block
   for "v"
 
