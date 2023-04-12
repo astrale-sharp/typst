@@ -526,6 +526,9 @@ impl Lexer<'_> {
                 return keyword;
             }
         }
+        if ident == "_" {
+            return SyntaxKind::Underscore;
+        }
 
         SyntaxKind::Ident
     }
