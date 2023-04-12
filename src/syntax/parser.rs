@@ -857,11 +857,8 @@ fn pattern(p: &mut Parser) -> PatternKind {
     let m = p.marker();
 
     if p.at(SyntaxKind::LeftParen) {
-<<<<<<< HEAD
-        let kind = collection(p, false);
-=======
-        collection(p, false, true);
->>>>>>> 7330a67c (parsing as underscore with changing the method)
+        let kind = collection(p, false,true);
+//        collection(p, false, true);
         validate_destruct_pattern(p, m);
         p.wrap(m, SyntaxKind::Pattern);
 
