@@ -1593,25 +1593,15 @@ impl AstNode for Param {
 }
 
 node! {
-    Underscore
-}
-
-node! {
     /// A destructuring pattern: `x` or `(x, _, ..y)`.
     Pattern
-}
-
-#[derive(Debug, Clone, Hash)]
-pub enum MaybeIdent {
-    Ident(Ident),
-    Underscore(Underscore),
 }
 
 /// The kind of a pattern.
 #[derive(Debug, Clone, Hash)]
 pub enum PatternKind {
     /// A single identifier: `x`.
-    Ident(MaybeIdent),
+    Ident(Ident),
     /// A destructuring pattern: `(x, _, ..y)`.
     Destructure(Vec<DestructuringKind>),
 }
@@ -1619,8 +1609,8 @@ pub enum PatternKind {
 /// The kind of an element in a destructuring pattern.
 #[derive(Debug, Clone, Hash)]
 pub enum DestructuringKind {
-    /// An identifier or an underscore: `x`, `_`.
-    Ident(MaybeIdent),
+    /// An identifier: `x`.
+    Ident(Ident),
     /// An argument sink: `..y`.
     Sink(Option<Ident>),
     /// Named arguments: `x: 1`.
