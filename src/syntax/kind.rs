@@ -230,8 +230,6 @@ pub enum SyntaxKind {
     WhileLoop,
     /// A for loop: `for x in y { z }`.
     ForLoop,
-    /// A for loop's destructuring pattern: `x` or `x, y`.
-    ForPattern,
     /// A module import: `import a, b, c from "utils.typ"`.
     ModuleImport,
     /// Items to import from a module: `a, b, c`.
@@ -425,7 +423,6 @@ impl SyntaxKind {
             Self::Conditional => "`if` expression",
             Self::WhileLoop => "while-loop expression",
             Self::ForLoop => "for-loop expression",
-            Self::ForPattern => "for-loop destructuring pattern",
             Self::ModuleImport => "`import` expression",
             Self::ImportItems => "import items",
             Self::ModuleInclude => "`include` expression",

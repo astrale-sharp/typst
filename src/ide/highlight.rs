@@ -239,7 +239,6 @@ pub fn highlight(node: &LinkedNode) -> Option<Tag> {
         SyntaxKind::Conditional => None,
         SyntaxKind::WhileLoop => None,
         SyntaxKind::ForLoop => None,
-        SyntaxKind::ForPattern => None,
         SyntaxKind::ModuleImport => None,
         SyntaxKind::ImportItems => None,
         SyntaxKind::ModuleInclude => None,
