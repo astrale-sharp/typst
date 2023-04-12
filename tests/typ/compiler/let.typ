@@ -227,3 +227,11 @@ Three
 
 // Error: 15 expected expression
 #let func(x) =
+
+---
+
+#let _ = 4
+// Error: 3 some
+#_
+// Error: 5 some
+#lorem(_)
