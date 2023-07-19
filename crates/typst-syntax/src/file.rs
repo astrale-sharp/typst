@@ -10,7 +10,7 @@ use ecow::{eco_format, EcoString};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-use super::is_ident;
+// use super::is_ident;
 
 /// The global package-path interner.
 static INTERNER: Lazy<RwLock<Interner>> =
@@ -186,21 +186,22 @@ impl FromStr for PackageSpec {
             Err("package specification must start with '@'")?;
         }
 
-        let namespace = s.eat_until('/');
-        if namespace.is_empty() {
-            Err("package specification is missing namespace")?;
-        } else if !is_ident(namespace) {
-            Err(eco_format!("`{namespace}` is not a valid package namespace"))?;
-        }
+        // let namespace = s.eat_until('/');
+        // if namespace.is_empty() {
+        //     Err("package specification is missing namespace")?;
+        // } else if !is_ident(namespace) {
+        //     Err(eco_format!("`{namespace}` is not a valid package namespace"))?;
+        // }
 
         s.eat_if('/');
 
         let name = s.eat_until(':');
-        if name.is_empty() {
-            Err("package specification is missing name")?;
-        } else if !is_ident(name) {
-            Err(eco_format!("`{name}` is not a valid package name"))?;
-        }
+        // if name.is_empty() {
+        //     Err("package specification is missing name")?;
+        // } else if !is_ident(name) {
+        //     Err(eco_format!("`{name}` is not a valid package name"))?;
+        // }
+        todo!();
 
         s.eat_if(':');
 
@@ -208,12 +209,12 @@ impl FromStr for PackageSpec {
         if version.is_empty() {
             Err("package specification is missing version")?;
         }
-
-        Ok(Self {
-            namespace: namespace.into(),
-            name: name.into(),
-            version: version.parse()?,
-        })
+        todo!()
+        // Ok(Self {
+        //     namespace: namespace.into(),
+        //     name: name.into(),
+        //     version: version.parse()?,
+        // })
     }
 }
 

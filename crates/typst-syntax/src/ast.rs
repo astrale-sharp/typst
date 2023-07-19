@@ -9,7 +9,8 @@ use ecow::EcoString;
 use unscanny::Scanner;
 
 use super::{
-    is_id_continue, is_id_start, is_newline, split_newlines, Span, SyntaxKind, SyntaxNode,
+    // is_id_continue, is_id_start, is_newline, split_newlines,
+     Span, SyntaxKind, SyntaxNode,
 };
 
 /// A typed AST node.
@@ -545,51 +546,53 @@ impl Raw {
         // Trim tag, one space at the start, and one space at the end if the
         // last non-whitespace char is a backtick.
         if blocky {
-            let mut s = Scanner::new(text);
-            if s.eat_if(is_id_start) {
-                s.eat_while(is_id_continue);
-            }
-            text = s.after();
-            text = text.strip_prefix(' ').unwrap_or(text);
-            if text.trim_end().ends_with('`') {
-                text = text.strip_suffix(' ').unwrap_or(text);
-            }
+            // let mut s = Scanner::new(text);
+            // if s.eat_if(is_id_start) {
+            //     s.eat_while(is_id_continue);
+            // }
+            todo!();
+            // text = s.after();
+            // text = text.strip_prefix(' ').unwrap_or(text);
+            // if text.trim_end().ends_with('`') {
+            //     text = text.strip_suffix(' ').unwrap_or(text);
+            // }
         }
+        todo!()
 
         // Split into lines.
-        let mut lines = split_newlines(text);
+        // let mut lines = split_newlines(text);
 
-        if blocky {
-            let dedent = lines
-                .iter()
-                .skip(1)
-                .filter(|line| !line.chars().all(char::is_whitespace))
-                // The line with the closing ``` is always taken into account
-                .chain(lines.last())
-                .map(|line| line.chars().take_while(|c| c.is_whitespace()).count())
-                .min()
-                .unwrap_or(0);
+        // if blocky {
+        //     let dedent = lines
+        //         .iter()
+        //         .skip(1)
+        //         .filter(|line| !line.chars().all(char::is_whitespace))
+        //         // The line with the closing ``` is always taken into account
+        //         .chain(lines.last())
+        //         .map(|line| line.chars().take_while(|c| c.is_whitespace()).count())
+        //         .min()
+        //         .unwrap_or(0);
 
-            // Dedent based on column, but not for the first line.
-            for line in lines.iter_mut().skip(1) {
-                let offset = line.chars().take(dedent).map(char::len_utf8).sum();
-                *line = &line[offset..];
-            }
+        //     // Dedent based on column, but not for the first line.
+        //     for line in lines.iter_mut().skip(1) {
+        //         let offset = line.chars().take(dedent).map(char::len_utf8).sum();
+        //         *line = &line[offset..];
+        //     }
 
-            let is_whitespace = |line: &&str| line.chars().all(char::is_whitespace);
+        //     let is_whitespace = |line: &&str| line.chars().all(char::is_whitespace);
 
-            // Trims a sequence of whitespace followed by a newline at the start.
-            if lines.first().map_or(false, is_whitespace) {
-                lines.remove(0);
-            }
+        //     // Trims a sequence of whitespace followed by a newline at the start.
+        //     if lines.first().map_or(false, is_whitespace) {
+        //         lines.remove(0);
+        //     }
 
-            // Trims a newline followed by a sequence of whitespace at the end.
-            if lines.last().map_or(false, is_whitespace) {
-                lines.pop();
-            }
-        }
+        //     // Trims a newline followed by a sequence of whitespace at the end.
+        //     if lines.last().map_or(false, is_whitespace) {
+        //         lines.pop();
+        //     }
+        // }
 
-        lines.join("\n").into()
+        // lines.join("\n").into()
     }
 
     /// An optional identifier specifying the language to syntax-highlight in.
@@ -603,16 +606,18 @@ impl Raw {
 
         let inner = text.trim_start_matches('`');
         let mut s = Scanner::new(inner);
-        s.eat_if(is_id_start).then(|| {
-            s.eat_while(is_id_continue);
-            s.before()
-        })
+        // s.eat_if(is_id_start).then(|| {
+        //     s.eat_while(is_id_continue);
+        //     s.before()
+        // })
+        todo!()
     }
 
     /// Whether the raw text should be displayed in a separate block.
     pub fn block(&self) -> bool {
         let text = self.0.text();
-        text.starts_with("```") && text.chars().any(is_newline)
+        // text.starts_with("```") && text.chars().any(is_newline)
+        todo!()
     }
 }
 

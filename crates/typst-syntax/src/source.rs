@@ -7,8 +7,10 @@ use std::sync::Arc;
 
 use comemo::Prehashed;
 
-use super::reparser::reparse;
-use super::{is_newline, parse, FileId, LinkedNode, Span, SyntaxNode};
+// use super::reparser::reparse;
+use super::{
+    // is_newline, parse, 
+    FileId, LinkedNode, Span, SyntaxNode};
 
 /// A source file.
 ///
@@ -32,14 +34,15 @@ impl Source {
     /// Create a new source file.
     #[tracing::instrument(skip_all)]
     pub fn new(id: FileId, text: String) -> Self {
-        let mut root = parse(&text);
-        root.numberize(id, Span::FULL).unwrap();
-        Self(Arc::new(Repr {
-            id,
-            lines: lines(&text),
-            text: Prehashed::new(text),
-            root: Prehashed::new(root),
-        }))
+        // let mut root = parse(&text);
+        // root.numberize(id, Span::FULL).unwrap();
+        // Self(Arc::new(Repr {
+        //     id,
+        //     lines: lines(&text),
+        //     text: Prehashed::new(text),
+        //     root: Prehashed::new(root),
+        // }))
+        todo!()
     }
 
     /// Create a source file without a real id and path, usually for testing.
@@ -49,14 +52,15 @@ impl Source {
 
     /// Create a source file with the same synthetic span for all nodes.
     pub fn synthesized(text: String, span: Span) -> Self {
-        let mut root = parse(&text);
-        root.synthesize(span);
-        Self(Arc::new(Repr {
-            id: FileId::detached(),
-            lines: lines(&text),
-            text: Prehashed::new(text),
-            root: Prehashed::new(root),
-        }))
+        // let mut root = parse(&text);
+        // root.synthesize(span);
+        // Self(Arc::new(Repr {
+        //     id: FileId::detached(),
+        //     lines: lines(&text),
+        //     text: Prehashed::new(text),
+        //     root: Prehashed::new(root),
+        // }))
+        todo!()
     }
 
     /// The root node of the file's untyped syntax tree.
@@ -84,9 +88,10 @@ impl Source {
         let inner = Arc::make_mut(&mut self.0);
         inner.text = Prehashed::new(text);
         inner.lines = lines(&inner.text);
-        let mut root = parse(&inner.text);
-        root.numberize(inner.id, Span::FULL).unwrap();
-        inner.root = Prehashed::new(root);
+        // let mut root = parse(&inner.text);
+        // root.numberize(inner.id, Span::FULL).unwrap();
+        // inner.root = Prehashed::new(root);
+        todo!()
     }
 
     /// Edit the source file by replacing the given range.
@@ -121,9 +126,10 @@ impl Source {
         ));
 
         // Incrementally reparse the replaced range.
-        inner
-            .root
-            .update(|root| reparse(root, &inner.text, replace, with.len()))
+        // inner
+            // .root
+            // .update(|root| reparse(root, &inner.text, replace, with.len()))
+            todo!()
     }
 
     /// Get the length of the file in UTF-8 encoded bytes.
@@ -287,7 +293,8 @@ fn lines_from(
     std::iter::from_fn(move || {
         s.eat_until(|c: char| {
             utf16_idx += c.len_utf16();
-            is_newline(c)
+            // is_newline(c)
+            todo!()
         });
 
         if s.done() {
