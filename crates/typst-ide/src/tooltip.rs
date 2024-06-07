@@ -3,7 +3,7 @@ use std::fmt::Write;
 use ecow::{eco_format, EcoString};
 use if_chain::if_chain;
 use typst::foundations::{repr, Capturer, CastInfo, Repr, Value};
-use typst::lang::{CapturesVisitor, Tracer};
+use typst::lang::Tracer;
 use typst::layout::Length;
 use typst::model::Document;
 use typst::syntax::{ast, LinkedNode, Side, Source, SyntaxKind};
@@ -253,7 +253,7 @@ fn font_tooltip(world: &dyn World, leaf: &LinkedNode) -> Option<Tooltip> {
 
 #[cfg(test)]
 mod tests {
-    use typst::eval::Tracer;
+    use typst::lang::Tracer;
     use typst::syntax::Side;
 
     use super::{tooltip, Tooltip};
