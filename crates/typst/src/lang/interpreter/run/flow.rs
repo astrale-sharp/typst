@@ -40,10 +40,14 @@ impl SimpleRun for InstantiateModule {
 
         // Iterate over the module description and apply the rules.
         for value in &module.imports {
-            let field = loaded.field(value.name).at(value.span)?;
+            let mut names = value.names.iter();
+            let first = loaded.field(*names.next().unwrap()).at(value.span)?;
+            let field = names.fold(Ok(first.clone()), |field, name| {
+                field.and_then(|field| field.field(*name).at(value.span))
+            })?;
 
             // Apply the rule.
-            vm.write_one(value.location, field.clone()).at(value.span)?;
+            vm.write_one(value.location, field).at(value.span)?;
         }
 
         // Write the module to the output.

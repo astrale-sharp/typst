@@ -231,7 +231,7 @@ pub struct CompiledDynamicModule {
 
 #[derive(Debug, Clone, Hash)]
 pub struct CompiledDynamicImport {
-    pub name: &'static str,
+    pub names: SmallVec<[&'static str; 1]>,
     pub location: Register,
     pub span: Span,
 }

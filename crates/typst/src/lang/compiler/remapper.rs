@@ -244,7 +244,7 @@ impl IntoCompiledValue for DynamicImport {
 
     fn into_compiled_value(self) -> Self::CompiledValue {
         CompiledDynamicImport {
-            name: self.name.resolve(),
+            names: self.names.into_iter().map(|p| p.resolve()).collect(),
             location: self.location.into_compiled_value(),
             span: self.span,
         }

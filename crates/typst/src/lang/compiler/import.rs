@@ -55,7 +55,7 @@ impl DynamicModule {
 #[derive(Debug, Clone, Hash)]
 pub struct DynamicImport {
     pub span: Span,
-    pub name: PicoStr,
+    pub names: Vec<PicoStr>,
     pub location: RegisterGuard,
 }
 
@@ -370,7 +370,6 @@ impl Import for DynamicModule {
                     match item {
                         ast::ImportItem::Simple(path) => {
                             let name = path.name();
-                            todo!();
                             self.imports.entry(name.get().clone())
                                 .and_modify(|_| {
                                     // If it already exists, warn the user.
@@ -385,7 +384,7 @@ impl Import for DynamicModule {
                                     let alloc = compiler.declare(span, name.as_str());
                                     DynamicImport {
                                         span: name.span(),
-                                        name: name.as_str().into(),
+                                        names: path.iter().map(|p| p.as_str()).map(PicoStr::from).collect(),
                                         location: alloc,
                                     }
                                 });
@@ -414,7 +413,7 @@ impl Import for DynamicModule {
                                     let alloc = compiler.declare(span, new_name);
                                     DynamicImport {
                                         span: renamed.span(),
-                                        name: old_name.into(),
+                                        names: vec![old_name.into()],
                                         location: alloc,
                                     }
                                 });
@@ -458,13 +457,31 @@ impl Import for Module {
                                 ));
                             }
 
-                            todo!();
-                            let Some(value) = self.scope().get(name.get().as_str())
-                            else {
+                            let mut iter = path.iter();
+                            let first = iter.next().expect("path is empty");
+                            let Some(initial) = self.scope().get(first.as_str()) else {
                                 bail!(
-                                    name.span(),
+                                    first.span(),
                                     "cannot find `{}` in module `{}`",
-                                    name.get(),
+                                    first.get(),
+                                    self.name().as_str()
+                                );
+                            };
+
+                            let Some(value) =
+                                path.iter().fold(Some(initial.clone()), |value, path| {
+                                    value.and_then(|v| v.field(path.as_str()).ok())
+                                })
+                            else {
+                                let path_as_str: String = path
+                                    .iter()
+                                    .map(|path| path.as_str())
+                                    .collect::<Vec<_>>()
+                                    .join(".");
+                                bail!(
+                                    path.span(),
+                                    "cannot find `{}` in module `{}`",
+                                    path_as_str,
                                     self.name().as_str()
                                 );
                             };
