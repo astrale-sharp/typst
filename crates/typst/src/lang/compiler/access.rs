@@ -3,7 +3,7 @@ use typst_syntax::Span;
 
 use super::call::ArgsCompile;
 use super::{Compile, Compiler, IntoCompiledValue, ReadableGuard, RegisterGuard};
-use crate::diag::{bail, error, At, SourceResult};
+use crate::diag::{bail, error, At, HintedString, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
     cannot_mutate_constant, unknown_variable, Func, IntoValue, Module, Type, Value,
@@ -172,7 +172,10 @@ impl CompileAccess for ast::Ident<'_> {
                         .global
                         .field_by_index(global.as_raw() as usize)
                         .ok_or_else(|| {
-                            error!("could not find global `{}` in scope", self.get())
+                            HintedString::new(error!(
+                                "could not find global `{}` in scope",
+                                self.get()
+                            ))
                         })
                         .at(self.span())?
                         .clone()

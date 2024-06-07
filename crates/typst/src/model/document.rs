@@ -1,13 +1,14 @@
 use ecow::EcoString;
 
-use crate::diag::{bail, SourceResult, StrResult};
+use crate::diag::{bail, HintedStrResult, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
     cast, elem, Args, Array, Construct, Content, Datetime, Packed, Smart, StyleChain,
-    StyledElem, Value,
+    Value,
 };
 use crate::introspection::{Introspector, ManualPageCounter};
-use crate::layout::{LayoutRoot, Page, PageElem};
+use crate::layout::{Page, PageElem};
+use crate::realize::StyleVec;
 
 /// The root element of a document and its metadata.
 ///
@@ -25,7 +26,7 @@ use crate::layout::{LayoutRoot, Page, PageElem};
 ///
 /// Note that metadata set with this function is not rendered within the
 /// document. Instead, it is embedded in the compiled PDF file.
-#[elem(Construct, LayoutRoot)]
+#[elem(Construct)]
 pub struct DocumentElem {
     /// The document's title. This is often rendered as the title of the
     /// PDF viewer window.
@@ -60,7 +61,7 @@ pub struct DocumentElem {
     /// The page runs.
     #[internal]
     #[variadic]
-    pub children: Vec<Content>,
+    pub children: StyleVec,
 }
 
 impl Construct for DocumentElem {
@@ -69,9 +70,10 @@ impl Construct for DocumentElem {
     }
 }
 
-impl LayoutRoot for Packed<DocumentElem> {
+impl Packed<DocumentElem> {
+    /// Layout this document.
     #[typst_macros::time(name = "document", span = self.span())]
-    fn layout_root(
+    pub fn layout(
         &self,
         engine: &mut Engine,
         styles: StyleChain,
@@ -80,24 +82,13 @@ impl LayoutRoot for Packed<DocumentElem> {
         let mut page_counter = ManualPageCounter::new();
 
         let children = self.children();
-        let mut iter = children.iter().peekable();
+        let mut iter = children.chain(&styles).peekable();
 
-        while let Some(mut child) = iter.next() {
-            let outer = styles;
-            let mut styles = styles;
-            if let Some(styled) = child.to_packed::<StyledElem>() {
-                child = &styled.child;
-                styles = outer.chain(&styled.styles);
-            }
-
+        while let Some((child, styles)) = iter.next() {
             if let Some(page) = child.to_packed::<PageElem>() {
-                let extend_to = iter.peek().and_then(|&next| {
-                    *next
-                        .to_packed::<StyledElem>()
-                        .map_or(next, |styled| &styled.child)
-                        .to_packed::<PageElem>()?
-                        .clear_to()?
-                });
+                let extend_to = iter
+                    .peek()
+                    .and_then(|(next, _)| *next.to_packed::<PageElem>()?.clear_to()?);
                 let run = page.layout(engine, styles, &mut page_counter, extend_to)?;
                 pages.extend(run);
             } else {
@@ -124,7 +115,7 @@ cast! {
     Author,
     self => self.0.into_value(),
     v: EcoString => Self(vec![v]),
-    v: Array => Self(v.into_iter().map(Value::cast).collect::<StrResult<_>>()?),
+    v: Array => Self(v.into_iter().map(Value::cast).collect::<HintedStrResult<_>>()?),
 }
 
 /// A list of keywords.
@@ -135,7 +126,7 @@ cast! {
     Keywords,
     self => self.0.into_value(),
     v: EcoString => Self(vec![v]),
-    v: Array => Self(v.into_iter().map(Value::cast).collect::<StrResult<_>>()?),
+    v: Array => Self(v.into_iter().map(Value::cast).collect::<HintedStrResult<_>>()?),
 }
 
 /// A finished document with metadata and page frames.

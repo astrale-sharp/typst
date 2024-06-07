@@ -71,11 +71,12 @@ pub struct CompileCommand {
     #[clap(flatten)]
     pub common: SharedArgs,
 
-    /// Path to output file (PDF, PNG, or SVG).
-    /// Use `-` to write output to stdout; For output formats emitting one file per page,
-    /// a page number template must be present if the source document renders to multiple pages.
-    /// Use `{p}` for page numbers, `{0p}` for zero padded page numbers, `{t}` for page count.
-    /// For example, `doc-page-{0p}-of-{t}.png` creates `doc-page-01-of-10.png` and so on.
+    /// Path to output file (PDF, PNG or SVG). Use `-` to write output to stdout.
+    ///
+    /// For output formats emitting one file per page (PNG & SVG), a page number template
+    /// must be present if the source document renders to multiple pages. Use `{p}` for page
+    /// numbers, `{0p}` for zero padded page numbers and `{t}` for page count. For example,
+    /// `page-{0p}-of-{t}.png` creates `page-01-of-10.png`, `page-02-of-10.png` and so on.
     #[clap(required_if_eq("input", "-"), value_parser = ValueParser::new(output_value_parser))]
     pub output: Option<Output>,
 
@@ -130,6 +131,10 @@ pub struct InitCommand {
 
     /// The project directory, defaults to the template's name
     pub dir: Option<String>,
+
+    /// Arguments related to storage of packages in the system
+    #[clap(flatten)]
+    pub package_storage_args: PackageStorageArgs,
 }
 
 /// Processes an input file to extract provided metadata
@@ -153,6 +158,10 @@ pub struct QueryCommand {
     /// The format to serialize in
     #[clap(long = "format", default_value = "json")]
     pub format: SerializationFormat,
+
+    /// Whether to pretty-print the serialized output
+    #[clap(long)]
+    pub pretty: bool,
 }
 
 // Output file format for query command
@@ -165,7 +174,7 @@ pub enum SerializationFormat {
 /// Common arguments of compile, watch, and query.
 #[derive(Debug, Clone, Args)]
 pub struct SharedArgs {
-    /// Path to input Typst file, use `-` to read input from stdin
+    /// Path to input Typst file. Use `-` to read input from stdin
     #[clap(value_parser = input_value_parser)]
     pub input: Input,
 
@@ -182,14 +191,9 @@ pub struct SharedArgs {
     )]
     pub inputs: Vec<(String, String)>,
 
-    /// Adds additional directories to search for fonts
-    #[clap(
-        long = "font-path",
-        env = "TYPST_FONT_PATHS",
-        value_name = "DIR",
-        value_delimiter = ENV_PATH_SEP,
-    )]
-    pub font_paths: Vec<PathBuf>,
+    /// Common font arguments
+    #[clap(flatten)]
+    pub font_args: FontArgs,
 
     /// The document's creation date formatted as a UNIX timestamp.
     ///
@@ -209,6 +213,26 @@ pub struct SharedArgs {
         value_parser = clap::value_parser!(DiagnosticFormat)
     )]
     pub diagnostic_format: DiagnosticFormat,
+
+    /// Arguments related to storage of packages in the system
+    #[clap(flatten)]
+    pub package_storage_args: PackageStorageArgs,
+}
+
+/// Arguments related to where packages are stored in the system.
+#[derive(Debug, Clone, Args)]
+pub struct PackageStorageArgs {
+    /// Custom path to local packages, defaults to system-dependent location
+    #[clap(long = "package-path", env = "TYPST_PACKAGE_PATH", value_name = "DIR")]
+    pub package_path: Option<PathBuf>,
+
+    /// Custom path to package cache, defaults to system-dependent location
+    #[clap(
+        long = "package-cache-path",
+        env = "TYPST_PACKAGE_CACHE_PATH",
+        value_name = "DIR"
+    )]
+    pub package_cache_path: Option<PathBuf>,
 }
 
 /// Parses a UNIX timestamp according to <https://reproducible-builds.org/specs/source-date-epoch/>
@@ -338,6 +362,18 @@ fn parse_page_number(value: &str) -> Result<NonZeroUsize, &'static str> {
 /// Lists all discovered fonts in system and custom font paths
 #[derive(Debug, Clone, Parser)]
 pub struct FontsCommand {
+    /// Common font arguments
+    #[clap(flatten)]
+    pub font_args: FontArgs,
+
+    /// Also lists style variants of each font family
+    #[arg(long)]
+    pub variants: bool,
+}
+
+/// Common arguments to customize available fonts
+#[derive(Debug, Clone, Parser)]
+pub struct FontArgs {
     /// Adds additional directories to search for fonts
     #[clap(
         long = "font-path",
@@ -347,9 +383,10 @@ pub struct FontsCommand {
     )]
     pub font_paths: Vec<PathBuf>,
 
-    /// Also lists style variants of each font family
+    /// Ensures system fonts won't be searched, unless explicitly included via
+    /// `--font-path`
     #[arg(long)]
-    pub variants: bool,
+    pub ignore_system_fonts: bool,
 }
 
 /// Which format to use for diagnostics.
@@ -380,8 +417,18 @@ pub struct UpdateCommand {
 
     /// Reverts to the version from before the last update (only possible if
     /// `typst update` has previously ran)
-    #[clap(long, default_value_t = false, exclusive = true)]
+    #[clap(
+        long,
+        default_value_t = false,
+        conflicts_with = "version",
+        conflicts_with = "force"
+    )]
     pub revert: bool,
+
+    /// Custom path to the backup file created on update and used by `--revert`,
+    /// defaults to system-dependent location
+    #[clap(long = "backup-path", env = "TYPST_UPDATE_BACKUP_PATH", value_name = "FILE")]
+    pub backup_path: Option<PathBuf>,
 }
 
 /// Which format to use for the generated output file.

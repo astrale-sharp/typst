@@ -1,6 +1,6 @@
 use std::f64::consts::SQRT_2;
 
-use ecow::EcoString;
+use ecow::{eco_vec, EcoString};
 use rustybuzz::Feature;
 use ttf_parser::gsub::{AlternateSubstitution, SingleSubstitution, SubstitutionSubtable};
 use ttf_parser::math::MathValue;
@@ -12,12 +12,13 @@ use unicode_segmentation::UnicodeSegmentation;
 use crate::diag::SourceResult;
 use crate::engine::Engine;
 use crate::foundations::{Content, Packed, StyleChain};
-use crate::layout::{Abs, Axes, BoxElem, Em, Frame, LayoutMultiple, Regions, Size};
+use crate::layout::{Abs, Axes, BoxElem, Em, Frame, Regions, Size};
 use crate::math::{
     scaled_font_size, styled_char, EquationElem, FrameFragment, GlyphFragment,
     LayoutMath, MathFragment, MathRun, MathSize, THICK,
 };
 use crate::model::ParElem;
+use crate::realize::StyleVec;
 use crate::syntax::{is_newline, Span};
 use crate::text::{
     features, BottomEdge, BottomEdgeMetric, Font, TextElem, TextSize, TopEdge,
@@ -65,7 +66,7 @@ impl<'a, 'b, 'v> MathContext<'a, 'b, 'v> {
     pub fn new(
         engine: &'v mut Engine<'b>,
         styles: StyleChain<'a>,
-        regions: Regions,
+        base: Size,
         font: &'a Font,
     ) -> Self {
         let math_table = font.ttf().tables().math.unwrap();
@@ -102,7 +103,7 @@ impl<'a, 'b, 'v> MathContext<'a, 'b, 'v> {
 
         Self {
             engine,
-            regions: Regions::one(regions.base(), Axes::splat(false)),
+            regions: Regions::one(base, Axes::splat(false)),
             font,
             ttf: font.ttf(),
             table: math_table,
@@ -173,7 +174,7 @@ impl<'a, 'b, 'v> MathContext<'a, 'b, 'v> {
     ) -> SourceResult<Frame> {
         let local =
             TextElem::set_size(TextSize(scaled_font_size(self, styles).into())).wrap();
-        boxed.layout(self.engine, styles.chain(&local), self.regions)
+        boxed.layout(self.engine, styles.chain(&local), self.regions.base())
     }
 
     /// Layout the given [`Content`] into a [`Frame`].
@@ -286,7 +287,7 @@ impl<'a, 'b, 'v> MathContext<'a, 'b, 'v> {
         // to extend as far as needed.
         let spaced = text.graphemes(true).nth(1).is_some();
         let text = TextElem::packed(text).spanned(span);
-        let par = ParElem::new(vec![text]);
+        let par = ParElem::new(StyleVec::wrap(eco_vec![text]));
         let frame = Packed::new(par)
             .spanned(span)
             .layout(self.engine, styles, false, Size::splat(Abs::inf()), false)?

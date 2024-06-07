@@ -1,7 +1,7 @@
 use comemo::Track;
 use ecow::{eco_format, EcoString};
 use serde::Serialize;
-use typst::diag::{bail, StrResult};
+use typst::diag::{bail, HintedStrResult, StrResult};
 use typst::foundations::{Content, IntoValue, LocatableSelector, Scope};
 use typst::lang::{eval_string, EvalMode, Tracer};
 use typst::model::Document;
@@ -14,7 +14,7 @@ use crate::set_failed;
 use crate::world::SystemWorld;
 
 /// Execute a query command.
-pub fn query(command: &QueryCommand) -> StrResult<()> {
+pub fn query(command: &QueryCommand) -> HintedStrResult<()> {
     let mut world = SystemWorld::new(&command.common)?;
 
     // Reset everything and ensure that the main file is present.
@@ -56,7 +56,7 @@ fn retrieve(
     world: &dyn World,
     command: &QueryCommand,
     document: &Document,
-) -> StrResult<Vec<Content>> {
+) -> HintedStrResult<Vec<Content>> {
     let selector = eval_string(
         world.track(),
         &command.selector,
@@ -99,20 +99,28 @@ fn format(elements: Vec<Content>, command: &QueryCommand) -> StrResult<String> {
         let Some(value) = mapped.first() else {
             bail!("no such field found for element");
         };
-        serialize(value, command.format)
+        serialize(value, command.format, command.pretty)
     } else {
-        serialize(&mapped, command.format)
+        serialize(&mapped, command.format, command.pretty)
     }
 }
 
 /// Serialize data to the output format.
-fn serialize(data: &impl Serialize, format: SerializationFormat) -> StrResult<String> {
+fn serialize(
+    data: &impl Serialize,
+    format: SerializationFormat,
+    pretty: bool,
+) -> StrResult<String> {
     match format {
         SerializationFormat::Json => {
-            serde_json::to_string_pretty(data).map_err(|e| eco_format!("{e}"))
+            if pretty {
+                serde_json::to_string_pretty(data).map_err(|e| eco_format!("{e}"))
+            } else {
+                serde_json::to_string(data).map_err(|e| eco_format!("{e}"))
+            }
         }
         SerializationFormat::Yaml => {
-            serde_yaml::to_string(&data).map_err(|e| eco_format!("{e}"))
+            serde_yaml::to_string(data).map_err(|e| eco_format!("{e}"))
         }
     }
 }
