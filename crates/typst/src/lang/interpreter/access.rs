@@ -42,7 +42,7 @@ impl CompiledAccess {
                         method.clone().with(&mut args).into_value().spanned(span),
                     ))
                 } else {
-                    let err = match value.field(&field).at(*field_span) {
+                    let err = match value.field(field).at(*field_span) {
                         Ok(value) => return Ok(Cow::Owned(value)),
                         Err(err) => err,
                     };
@@ -51,7 +51,7 @@ impl CompiledAccess {
                     if_chain::if_chain! {
                         if let Value::Func(func) = &*value;
                         if let Some(element) = func.element();
-                        if let Some(id) = element.field_id(&field);
+                        if let Some(id) = element.field_id(field);
                         let styles = vm.context.styles().at(*field_span);
                         if let Some(value) = element.field_from_styles(
                             id,

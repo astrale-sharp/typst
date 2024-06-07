@@ -150,8 +150,7 @@ impl<'a> Vm<'a, '_> {
         if let Some(joiner) = self.joined.take() {
             self.joined = Some(joiner.join(value)?);
         } else if self.state.is_display() {
-            self.joined =
-                Some(Joiner::Display(SequenceElem::new(vec![value.display().into()])));
+            self.joined = Some(Joiner::Display(SequenceElem::new(vec![value.display()])));
         } else {
             self.joined = Some(Joiner::Value(value));
         }
@@ -236,7 +235,8 @@ impl<'a> Vm<'a, '_> {
     }
 
     /// Enter a new scope.
-    #[typst_macros::time(name = "enter scope", span = spans.get(0).cloned().unwrap_or_else(Span::detached))]
+    #[allow(clippy::too_many_arguments)]
+    #[typst_macros::time(name = "enter scope", span = spans.first().cloned().unwrap_or_else(Span::detached))]
     pub fn enter_scope<'b>(
         &'b mut self,
         engine: &mut Engine,
@@ -288,7 +288,7 @@ pub fn run<'a: 'b, 'b, 'c>(
             return None;
         }
 
-        debug_assert!(vm.instruction_pointer + 1 <= instructions.len());
+        debug_assert!(vm.instruction_pointer < instructions.len());
         Some(&instructions[vm.instruction_pointer])
     }
 
@@ -301,8 +301,8 @@ pub fn run<'a: 'b, 'b, 'c>(
         let idx = vm.instruction_pointer;
 
         opcode.run(
-            &instructions,
-            &spans,
+            instructions,
+            spans,
             spans[idx],
             vm,
             engine,

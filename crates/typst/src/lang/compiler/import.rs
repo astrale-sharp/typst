@@ -469,8 +469,8 @@ impl Import for Module {
                             };
 
                             let Some(value) =
-                                path.iter().fold(Some(initial.clone()), |value, path| {
-                                    value.and_then(|v| v.field(path.as_str()).ok())
+                                path.iter().try_fold(initial.clone(), |value, path| {
+                                    value.field(path.as_str()).ok()
                                 })
                             else {
                                 let path_as_str: String = path

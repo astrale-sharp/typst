@@ -42,6 +42,11 @@ impl RegisterAllocator {
     pub fn len(&self) -> usize {
         self.table.borrow().len()
     }
+
+    /// Whether the register table is empty.
+    pub fn is_empty(&self) -> bool {
+        self.table.borrow().is_empty()
+    }
 }
 
 /// The table of occupied registers.

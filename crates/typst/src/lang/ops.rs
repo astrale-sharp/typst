@@ -258,7 +258,7 @@ pub fn mul(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
 /// Compute the quotient of two values.
 pub fn div(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
     use Value::*;
-    if is_zero(&rhs) {
+    if is_zero(rhs) {
         bail!("cannot divide by zero");
     }
 
@@ -365,7 +365,7 @@ macro_rules! comparison {
     ($name:ident, $op:tt, $($pat:tt)*) => {
         /// Compute how a value compares with another value.
         pub fn $name(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
-            let ordering = compare(&lhs, &rhs)?;
+            let ordering = compare(lhs, rhs)?;
             Ok(Value::Bool(matches!(ordering, $($pat)*)))
         }
     };
@@ -490,7 +490,7 @@ fn try_cmp_arrays(a: &[Value], b: &[Value]) -> StrResult<Ordering> {
 
 /// Test whether one value is "in" another one.
 pub fn in_(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
-    if let Some(b) = contains(&lhs, &rhs) {
+    if let Some(b) = contains(lhs, rhs) {
         Ok(Value::Bool(b))
     } else {
         mismatch!("cannot apply 'in' to {} and {}", lhs, rhs)
@@ -499,7 +499,7 @@ pub fn in_(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
 
 /// Test whether one value is "not in" another one.
 pub fn not_in(lhs: &Value, rhs: &Value) -> HintedStrResult<Value> {
-    if let Some(b) = contains(&lhs, &rhs) {
+    if let Some(b) = contains(lhs, rhs) {
         Ok(Value::Bool(!b))
     } else {
         mismatch!("cannot apply 'not in' to {} and {}", lhs, rhs)

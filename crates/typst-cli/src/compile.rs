@@ -8,7 +8,7 @@ use codespan_reporting::term;
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
 use parking_lot::RwLock;
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-use typst::diag::{bail, At, FileError, Severity, SourceDiagnostic, StrResult};
+use typst::diag::{bail, FileError, Severity, SourceDiagnostic, StrResult};
 use typst::foundations::{Datetime, Smart};
 use typst::lang::Tracer;
 use typst::layout::{Frame, PageRanges};

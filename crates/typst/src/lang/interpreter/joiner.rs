@@ -96,7 +96,7 @@ impl Joiner {
         if let Self::Styled { parent, content, mut styles } = self {
             if content.is_empty() {
                 styles.apply_iter(to_add);
-                return Self::Styled { parent, content, styles };
+                Self::Styled { parent, content, styles }
             } else {
                 Self::Styled {
                     parent: Some(Box::new(Self::Styled { parent, content, styles })),

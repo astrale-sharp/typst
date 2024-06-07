@@ -121,7 +121,7 @@ fn assign_op(
         let dict = vm.read(*dict);
         if let CompiledAccess::Register(dict) = dict {
             if let Some(Value::Dict(dict)) = vm.write(*dict) {
-                let item = dict.at_mut(*field).at(*field_span)?;
+                let item = dict.at_mut(field).at(*field_span)?;
 
                 let old = std::mem::take(item);
                 *item = transformer(old, value)?;

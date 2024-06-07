@@ -272,7 +272,6 @@ impl<'lib> Scope<'lib> {
 
     /// Read a variable from this scope, including the global scope.
     pub fn read_no_global(&mut self, span: Span, var: &str) -> Option<ReadableGuard> {
-        let var = var.into();
         if let Some(guard) = self.read_local(var) {
             Some(guard)
         } else {

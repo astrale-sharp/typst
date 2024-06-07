@@ -175,7 +175,7 @@ impl SimpleRun for Spread {
         match vm.write(self.out) {
             Some(Value::Array(into)) => match value {
                 Value::Array(array) => {
-                    into.extend(array.into_iter());
+                    into.extend(array);
                 }
                 Value::None => {}
                 _ => {
@@ -184,7 +184,7 @@ impl SimpleRun for Spread {
             },
             Some(Value::Dict(into)) => match value {
                 Value::Dict(dict) => {
-                    into.extend(dict.into_iter());
+                    into.extend(dict);
                 }
                 Value::None => {}
                 _ => {

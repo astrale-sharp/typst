@@ -41,9 +41,9 @@ impl SimpleRun for InstantiateModule {
         // Iterate over the module description and apply the rules.
         for value in &module.imports {
             let mut names = value.names.iter();
-            let first = loaded.field(*names.next().unwrap()).at(value.span)?;
-            let field = names.fold(Ok(first.clone()), |field, name| {
-                field.and_then(|field| field.field(*name).at(value.span))
+            let first = loaded.field(names.next().unwrap()).at(value.span)?;
+            let field = names.try_fold(first.clone(), |field, name| {
+                field.field(name).at(value.span)
             })?;
 
             // Apply the rule.
@@ -135,10 +135,10 @@ impl SimpleRun for Call {
             //  - Redo the access as mutable
             //  - Call the function.
             if value.is_mut(method) {
-                let mut value = access.write(callee_span, vm, engine)?;
+                let value = access.write(callee_span, vm, engine)?;
 
                 let point = || Tracepoint::Call(Some((*method).into()));
-                let value = call_method_mut(&mut value, *method, args, span)
+                let value = call_method_mut(value, method, args, span)
                     .trace(engine.world, point, span)?
                     .spanned(span);
 
@@ -161,7 +161,7 @@ impl SimpleRun for Call {
                 let value = access.read(callee_span, vm)?;
 
                 // Check if we are calling a method.
-                if let Some(callee) = value.ty().scope().get(*method) {
+                if let Some(callee) = value.ty().scope().get(method) {
                     let this = Arg {
                         span,
                         name: None,
@@ -174,7 +174,7 @@ impl SimpleRun for Call {
                     let bytes = args.all::<Bytes>()?;
                     args.finish()?;
 
-                    let out = plugin.call(*method, bytes).at(span)?.into_value();
+                    let out = plugin.call(method, bytes).at(span)?.into_value();
 
                     // Write the value to the output.
                     vm.write_one(self.out, out).at(span)?;
@@ -349,7 +349,7 @@ impl Run for Iter {
             }
             Value::Bytes(bytes) => {
                 // Iterate over the integers of bytes.
-                iter!(for bytes.as_slice().into_iter().map(|byte| Value::Int(*byte as i64)))
+                iter!(for bytes.as_slice().iter().map(|byte| Value::Int(*byte as i64)))
             }
             _ => {
                 bail!(span, "cannot loop over {}", iterable_type);
@@ -443,7 +443,7 @@ impl SimpleRun for Return {
 
 impl SimpleRun for ReturnVal {
     fn run(&self, _: Span, vm: &mut Vm, _: &mut Engine) -> SourceResult<()> {
-        vm.output = Some(self.value.into());
+        vm.output = Some(self.value);
         if !vm.state.is_breaking() && !vm.state.is_continuing() {
             vm.state.set_returning(vm.output.is_some());
         }

@@ -43,11 +43,7 @@ impl<T: Read> Read for Option<T> {
     type Output<'a, 'b> = Option<T::Output<'a, 'b>> where 'a: 'b;
 
     fn read<'a, 'b>(&self, vm: &'b Vm<'a, '_>) -> Self::Output<'a, 'b> {
-        if let Some(this) = self {
-            Some(this.read(vm))
-        } else {
-            None
-        }
+        self.as_ref().map(|this| this.read(vm))
     }
 }
 
@@ -88,14 +84,14 @@ impl Read for Writable {
 }
 
 impl Write for Writable {
-    fn write<'a, 'b>(&self, vm: &'b mut Vm<'a, '_>) -> Option<&'b mut Value> {
+    fn write<'b>(&self, vm: &'b mut Vm<'_, '_>) -> Option<&'b mut Value> {
         match self {
             Self::Reg(register) => register.write(vm),
             Self::Joiner => unreachable!("cannot get mutable reference to joined value"),
         }
     }
 
-    fn write_one<'a>(self, vm: &mut Vm<'a, '_>, value: impl IntoValue) -> StrResult<()>
+    fn write_one(self, vm: &mut Vm<'_, '_>, value: impl IntoValue) -> StrResult<()>
     where
         Self: Sized,
     {
@@ -123,7 +119,7 @@ impl Read for Register {
 }
 
 impl Write for Register {
-    fn write<'a, 'b>(&self, vm: &'b mut Vm<'a, '_>) -> Option<&'b mut Value> {
+    fn write<'b>(&self, vm: &'b mut Vm<'_, '_>) -> Option<&'b mut Value> {
         Some(vm.registers[self.0 as usize].to_mut())
     }
 }

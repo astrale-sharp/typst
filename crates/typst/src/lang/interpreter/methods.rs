@@ -38,14 +38,8 @@ pub trait ValueAccessor {
 impl ValueAccessor for Value {
     fn is_mut(&self, method: &str) -> bool {
         match self {
-            Value::Array(_) => match method {
-                "push" | "pop" | "insert" | "remove" => true,
-                _ => false,
-            },
-            Value::Dict(_) => match method {
-                "insert" | "remove" => true,
-                _ => false,
-            },
+            Value::Array(_) => matches!(method, "push" | "pop" | "insert" | "remove"),
+            Value::Dict(_) => matches!(method, "insert" | "remove"),
             _ => false,
         }
     }

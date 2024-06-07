@@ -203,7 +203,7 @@ pub fn run_module(
         let mut storage = [NONE; 32];
         run_module_internal(module, engine, context, &mut storage, true, display)?
     } else {
-        let mut storage = vec![NONE; module.inner.registers as usize];
+        let mut storage = vec![NONE; module.inner.registers];
         run_module_internal(module, engine, context, &mut storage, true, display)?
     };
 
@@ -233,7 +233,7 @@ pub fn run_module_as_eval(
         let mut storage = [NONE; 32];
         run_module_internal(module, engine, context, &mut storage, false, display)?
     } else {
-        let mut storage = vec![NONE; module.inner.registers as usize];
+        let mut storage = vec![NONE; module.inner.registers];
         run_module_internal(module, engine, context, &mut storage, false, display)?
     };
 
@@ -251,7 +251,7 @@ fn run_module_internal<'a, 'b>(
 where
     'a: 'b,
 {
-    let mut vm = Vm::new(registers, &**module.inner, context).with_display(display);
+    let mut vm = Vm::new(registers, &module.inner, context).with_display(display);
 
     // Write all default values.
     for default in &*module.inner.defaults {
@@ -349,7 +349,7 @@ fn run_closure(
         let mut storage = [NONE; 32];
         run_closure_internal(func, closure, engine, context, args, &mut storage)
     } else {
-        let mut storage = vec![NONE; closure.inner.compiled.registers as usize];
+        let mut storage = vec![NONE; closure.inner.compiled.registers];
         run_closure_internal(func, closure, engine, context, args, &mut storage)
     }
 }
@@ -386,7 +386,7 @@ where
 
     // Write all of the captured values to the registers.
     for (target, value) in &*inner.captures {
-        vm.write_borrowed(*target, &value);
+        vm.write_borrowed(*target, value);
     }
 
     // Write the self reference to the registers.

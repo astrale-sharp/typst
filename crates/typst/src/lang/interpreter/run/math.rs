@@ -17,11 +17,8 @@ impl SimpleRun for Delimited {
         let right: Content = vm.read(self.right).clone().display();
 
         // Make the value into a delimited.
-        let value = LrElem::new(
-            SequenceElem::new(vec![left.into(), body.into(), right.into()])
-                .pack()
-                .spanned(span),
-        );
+        let value =
+            LrElem::new(SequenceElem::new(vec![left, body, right]).pack().spanned(span));
 
         // Write the value to the output.
         vm.write_one(self.out, value.pack().spanned(span)).at(span)?;

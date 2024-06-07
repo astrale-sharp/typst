@@ -153,7 +153,7 @@ impl CompileAccess for ast::Ident<'_> {
                 if mutable {
                     bail!(self.span(), "variables from outside the function are read-only and cannot be modified")
                 } else {
-                    Ok(Access::Register(cap.into()))
+                    Ok(Access::Register(cap))
                 }
             }
             Some(ReadableGuard::GlobalModule) => {
