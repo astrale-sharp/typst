@@ -2,7 +2,6 @@ pub mod closure;
 pub mod compiled;
 pub mod compiler;
 pub mod interpreter;
-pub mod module;
 pub mod opcodes;
 pub mod operands;
 pub mod ops;
