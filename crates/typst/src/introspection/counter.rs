@@ -5,7 +5,7 @@ use comemo::{Track, Tracked, TrackedMut};
 use ecow::{eco_format, eco_vec, EcoString, EcoVec};
 use smallvec::{smallvec, SmallVec};
 
-use crate::diag::{bail, At, SourceResult, StrResult};
+use crate::diag::{bail, At, HintedStrResult, SourceResult};
 use crate::engine::{Engine, Route};
 use crate::foundations::{
     cast, elem, func, scope, select_where, ty, Args, Array, Construct, Content, Context,
@@ -709,7 +709,7 @@ cast! {
     array: Array => Self(array
         .into_iter()
         .map(Value::cast)
-        .collect::<StrResult<_>>()?),
+        .collect::<HintedStrResult<_>>()?),
 }
 
 /// Executes an update of a counter.

@@ -6,18 +6,13 @@ use ecow::eco_format;
 
 use super::lines::Line;
 use super::repeated::{Footer, Header, Repeatable};
-use crate::diag::{
-    bail, At, Hint, HintedStrResult, HintedString, SourceResult, StrResult,
-};
+use crate::diag::{bail, At, Hint, HintedStrResult, HintedString, SourceResult};
 use crate::engine::Engine;
 use crate::foundations::{
     Array, CastInfo, Content, Context, Fold, FromValue, Func, IntoValue, Reflect,
     Resolve, Smart, StyleChain, Value,
 };
-use crate::layout::{
-    Abs, Alignment, Axes, Fragment, LayoutMultiple, Length, LinePosition, Regions, Rel,
-    Sides, Sizing,
-};
+use crate::layout::{Abs, Alignment, Axes, Length, LinePosition, Rel, Sides, Sizing};
 use crate::syntax::Span;
 use crate::utils::NonZeroExt;
 use crate::visualize::{Paint, Stroke};
@@ -88,11 +83,11 @@ impl<T: IntoValue> IntoValue for Celled<T> {
 }
 
 impl<T: FromValue> FromValue for Celled<T> {
-    fn from_value(value: Value) -> StrResult<Self> {
+    fn from_value(value: Value) -> HintedStrResult<Self> {
         match value {
             Value::Func(v) => Ok(Self::Func(v)),
             Value::Array(array) => Ok(Self::Array(
-                array.into_iter().map(T::from_value).collect::<StrResult<_>>()?,
+                array.into_iter().map(T::from_value).collect::<HintedStrResult<_>>()?,
             )),
             v if T::castable(&v) => Ok(Self::Value(T::from_value(v)?)),
             v => Err(Self::error(&v)),
@@ -201,17 +196,6 @@ impl From<Content> for Cell {
             stroke_overridden: Sides::splat(false),
             breakable: true,
         }
-    }
-}
-
-impl LayoutMultiple for Cell {
-    fn layout(
-        &self,
-        engine: &mut Engine,
-        styles: StyleChain,
-        regions: Regions,
-    ) -> SourceResult<Fragment> {
-        self.body.layout(engine, styles, regions)
     }
 }
 

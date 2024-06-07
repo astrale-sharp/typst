@@ -368,23 +368,24 @@ impl Import for DynamicModule {
             ast::Imports::Items(items) => {
                 for item in items.iter() {
                     match item {
-                        ast::ImportItem::Simple(simple) => {
-                            let name = simple.as_str();
-                            self.imports.entry(name.into())
+                        ast::ImportItem::Simple(path) => {
+                            let name = path.name();
+                            todo!();
+                            self.imports.entry(name.get().clone())
                                 .and_modify(|_| {
                                     // If it already exists, warn the user.
                                     engine
                                         .tracer
                                         .warn(warning!(
-                                            simple.span(), "importing {} multiple times", simple.as_str();
+                                            name.span(), "importing {} multiple times", name.as_str();
                                             hint: "remove the duplicate import statement",
                                         ));
                                 })
                                 .or_insert_with(|| {
-                                    let alloc = compiler.declare(span, name);
+                                    let alloc = compiler.declare(span, name.as_str());
                                     DynamicImport {
-                                        span: simple.span(),
-                                        name: name.into(),
+                                        span: name.span(),
+                                        name: name.as_str().into(),
                                         location: alloc,
                                     }
                                 });
@@ -446,7 +447,8 @@ impl Import for Module {
             ast::Imports::Items(items) => {
                 for item in items.iter() {
                     match item {
-                        ast::ImportItem::Simple(name) => {
+                        ast::ImportItem::Simple(path) => {
+                            let name = path.name();
                             if names.contains(name.as_str()) {
                                 engine.tracer.warn(warning!(
                                     name.span(),
@@ -456,6 +458,7 @@ impl Import for Module {
                                 ));
                             }
 
+                            todo!();
                             let Some(value) = self.scope().get(name.get().as_str())
                             else {
                                 bail!(
